@@ -14,7 +14,7 @@ blacklist = {}
 
 RegisterServerEvent("EasyAdmin:banPlayer", function(playerId,reason,expires)
     if playerId ~= nil and CheckAdminCooldown(source, "ban") then
-        if (DoesPlayerHavePermission(source, "player.ban.temporary") or DoesPlayerHavePermission(source, "player.ban.permanent")) and CachedPlayers[playerId] and not CachedPlayers[playerId].immune then
+        if (DoesPlayerHavePermission(source, "player.ban.temporary") or DoesPlayerHavePermission(source, "player.ban.permanent")) and CachedPlayers[playerId] then
             SetAdminCooldown(source, "ban")
             local bannedIdentifiers = CachedPlayers[playerId].identifiers or getAllPlayerIdentifiers(playerId)
             local username = CachedPlayers[playerId].name or getName(playerId, true)
@@ -29,12 +29,21 @@ RegisterServerEvent("EasyAdmin:banPlayer", function(playerId,reason,expires)
             
             reason = formatShortcuts(reason).. string.format(GetLocalisedText("reasonadd"), CachedPlayers[playerId].name, getName(source) )
             local ban = {banid = GetFreshBanId(), name = username,identifiers = bannedIdentifiers, banner = getName(source, true), reason = reason, expire = expires, expireString = formatDateString(expires) }
-            updateBlacklist( ban )
-            PrintDebugMessage("Player "..getName(source,true).." banned player "..CachedPlayers[playerId].name.." for "..reason, 3)
-            SendWebhookMessage(moderationNotification,string.format(GetLocalisedText("adminbannedplayer"), getName(source, false, true), CachedPlayers[playerId].name, reason, formatDateString( expires ), tostring(ban.banid) ), "ban", 16711680)
-            DropPlayer(playerId, string.format(GetLocalisedText("banned"), reason, formatDateString( expires ) ) )
-        elseif CachedPlayers[playerId].immune then
-            TriggerClientEvent("EasyAdmin:showNotification", source, GetLocalisedText("adminimmune"))
+            if not CachedPlayers[playerId].immune then
+                updateBlacklist( ban )
+                PrintDebugMessage("Player "..getName(source,true).." banned player "..CachedPlayers[playerId].name.." for "..reason, 3)
+                SendWebhookMessage(moderationNotification,string.format(GetLocalisedText("adminbannedplayer"), getName(source, false, true), CachedPlayers[playerId].name, reason, formatDateString( expires ), tostring(ban.banid) ), "ban", 16711680)
+                DropPlayer(playerId, string.format(GetLocalisedText("banned"), reason, formatDateString( expires ) ) )
+                TriggerClientEvent("EasyAdmin:banPlayerResponse", source, true)
+            else
+                local msg = GetLocalisedText("adminimmune")
+                TriggerClientEvent('ox_lib:notify', source, {
+                    title = "EasyAdmin",  
+                    description = msg,           
+                    type = 'error'           
+                })
+                TriggerClientEvent("EasyAdmin:banPlayerResponse", source, false)
+            end
         end
     end
 end)

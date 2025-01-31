@@ -572,103 +572,109 @@ function GenerateMenu()
                             end
                         end
                     end
-
-                    if permissions["player.ban.temporary"] or permissions["player.ban.permanent"] then
-                        local thisItem = NativeUI.CreateItem(GetLocalisedText("banplayer"), "", true)
-                        thisPlayer:AddItem(thisItem)
-
-                        thisItem.Activated = function(ParentMenu, SelectedItem)
-                            local input = lib.inputDialog('Ban Details', {{
-                                type = 'input',
-                                label = 'Reason for Ban',
-                                description = 'Provide a reason for banning the player.',
-                                required = true,
-                                min = 3,
-                                max = 128
-                            }, {
-                                type = 'select',
-                                label = 'Ban Duration',
-                                description = 'Select the duration of the ban.',
-                                options = {{
-                                    label = 'Hour(s)',
-                                    value = 'hours'
-                                }, {
-                                    label = 'Day(s)',
-                                    value = 'days'
-                                }, {
-                                    label = 'Week(s)',
-                                    value = 'weeks'
-                                }, {
-                                    label = 'Month(s)',
-                                    value = 'months'
-                                }, {
-                                    label = 'Permanent',
-                                    value = 'permanent'
-                                }},
-                                required = true,
-                                searchable = true,
-                                clearable = true
-                            }, {
-                                type = 'slider',
-                                label = 'Ban Time',
-                                description = 'Specify the length of the ban time.',
-                                min = 1,
-                                max = 300,
-                                step = 10,
-                                default = 30,
-                                required = true
-                            }})
-
-                            if input then
-                                local BanReason = input[1] or "No reason provided"
-
-                                local BanDuration = input[2] or 'hours'
-                                print(BanDuration)
-
-                                local AmountOfTime = input[3] or 0
-
-                                local BanLength = 0
-                                local BanDurationText = ""
-
-                                if BanDuration == 'permanent' then
-                                    BanLength = -1
-                                    BanDurationText = "Permanent"
-                                elseif AmountOfTime > 0 then
-                                    if BanDuration == 'hours' then
-                                        BanLength = AmountOfTime * 3600
-                                        BanDurationText = AmountOfTime .. " Hour(s)"
-                                    elseif BanDuration == 'days' then
-                                        BanLength = AmountOfTime * 86400
-                                        BanDurationText = AmountOfTime .. " Day(s)"
-                                    elseif BanDuration == 'weeks' then
-                                        BanLength = AmountOfTime * 604800
-                                        BanDurationText = AmountOfTime .. " Week(s)"
-                                    elseif BanDuration == 'months' then
-                                        BanLength = AmountOfTime * 2592000
-                                        BanDurationText = AmountOfTime .. " Month(s)"
-                                    end
-                                end
-
-                                if BanLength > 0 or BanLength == -1 then
-                                    TriggerServerEvent("EasyAdmin:banPlayer", thePlayer.id, BanReason, BanLength,
-                                        thePlayer.name)
-                                    lib.notify({
-                                        title = "EasyAdmin",
-                                        description = thePlayer.name .. " has been banned for " .. BanReason .. " for " ..
-                                            BanDurationText .. ".", -- Removed the BanLength (seconds) from the description
-                                        type = "info"
-                                    })
-                                else
-                                    lib.notify({
-                                        title = "Error",
-                                        description = "Invalid ban length! Please enter a valid number.",
-                                        type = "error"
-                                    })
-                                end
-
-                            end
-                        end
-                    end
+					if permissions["player.ban.temporary"] or permissions["player.ban.permanent"] then
+						local thisItem = NativeUI.CreateItem(GetLocalisedText("banplayer"), "", true)
+						thisPlayer:AddItem(thisItem)
+					
+						thisItem.Activated = function(ParentMenu, SelectedItem)
+							local input = lib.inputDialog('Ban Details', {{
+								type = 'input',
+								label = 'Reason for Ban',
+								description = 'Provide a reason for banning the player.',
+								required = true,
+								min = 3,
+								max = 128
+							}, {
+								type = 'select',
+								label = 'Ban Duration',
+								description = 'Select the duration of the ban.',
+								options = {{
+									label = 'Hour(s)',
+									value = 'hours'
+								}, {
+									label = 'Day(s)',
+									value = 'days'
+								}, {
+									label = 'Week(s)',
+									value = 'weeks'
+								}, {
+									label = 'Month(s)',
+									value = 'months'
+								}, {
+									label = 'Permanent',
+									value = 'permanent'
+								}},
+								required = true,
+								searchable = true,
+								clearable = true
+							}, {
+								type = 'slider',
+								label = 'Ban Time',
+								description = 'Specify the length of the ban time.',
+								min = 1,
+								max = 300,
+								step = 10,
+								default = 30,
+								required = true
+							}})
+					
+							if input then
+								local BanReason = input[1] or "No reason provided"
+					
+								local BanDuration = input[2] or 'hours'
+								print(BanDuration)
+					
+								local AmountOfTime = input[3] or 0
+					
+								local BanLength = 0
+								local BanDurationText = ""
+					
+								if BanDuration == 'permanent' then
+									BanLength = -1
+									BanDurationText = "Permanent"
+								elseif AmountOfTime > 0 then
+									if BanDuration == 'hours' then
+										BanLength = AmountOfTime * 3600
+										BanDurationText = AmountOfTime .. " Hour(s)"
+									elseif BanDuration == 'days' then
+										BanLength = AmountOfTime * 86400
+										BanDurationText = AmountOfTime .. " Day(s)"
+									elseif BanDuration == 'weeks' then
+										BanLength = AmountOfTime * 604800
+										BanDurationText = AmountOfTime .. " Week(s)"
+									elseif BanDuration == 'months' then
+										BanLength = AmountOfTime * 2592000
+										BanDurationText = AmountOfTime .. " Month(s)"
+									end
+								end
+					
+								if BanLength > 0 or BanLength == -1 then
+									TriggerServerEvent("EasyAdmin:banPlayer", thePlayer.id, BanReason, BanLength,
+										thePlayer.name)
+									RegisterNetEvent("EasyAdmin:banPlayerResponse")
+									AddEventHandler("EasyAdmin:banPlayerResponse", function(success)
+										if success then
+											lib.notify({
+												title = "EasyAdmin",
+												description = thePlayer.name .. " has been banned for " .. BanReason .. " for " ..
+													BanDurationText .. ".", -- Removed the BanLength (seconds) from the description
+												type = "info"
+											})
+										else
+											
+										end
+									end)
+								else
+									lib.notify({
+										title = "Error",
+										description = "Invalid ban length! Please enter a valid number.",
+										type = "error"
+									})
+								end
+					
+							end
+						end
+					end
 
                     if permissions["player.mute"] then
                         local thisItem = NativeUI.CreateCheckboxItem(GetLocalisedText("mute"),
