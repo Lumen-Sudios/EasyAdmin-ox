@@ -11,7 +11,7 @@
 ------------------------------------
 
 
--- Cooldowns for Admin Actions
+-- Cooldowns for EasyAdmins
 AdminCooldowns = {}
 -- Returns true if allowed, false if cooldown active
 function CheckAdminCooldown(src, action)
@@ -73,16 +73,22 @@ function sendRandomReminder()
 	end
 end
 
-function announce(reason)
-	if reason then
-		TriggerClientEvent("EasyAdmin:showNotification", -1, "[" .. GetLocalisedText("announcement") .. "] " .. reason)
-		return true
-	else
-		return false
-	end
-end
+RegisterServerEvent('ox_lib:notifyAll')
+AddEventHandler('ox_lib:notifyAll', function(data)
+    TriggerClientEvent('ox_lib:notify', -1, data)
+end)
 
-exports('announce', announce)
+RegisterServerEvent("EasyAdmin:announcement")
+AddEventHandler("EasyAdmin:announcement", function(message)
+    if message and message ~= "" then
+        -- Broadcast the announcement to all players
+        TriggerClientEvent("ox_lib:notify", -1, {
+            title = "Announcement",
+            description = message,
+            type = "info"
+        })
+    end
+end)
 
 Citizen.CreateThread(function()
 	--Wait(10000)
@@ -315,7 +321,12 @@ Citizen.CreateThread(function()
 			PrintDebugMessage("Kicking Player "..getName(source, true).." for "..reason, 3)
 			DropPlayer(playerId, string.format(GetLocalisedText("kicked"), getName(source), reason) )
 		elseif CachedPlayers[playerId].immune then
-			TriggerClientEvent("EasyAdmin:showNotification", source, GetLocalisedText("adminimmune"))
+			local msg = GetLocalisedText("adminimmune")
+			TriggerClientEvent('ox_lib:notify', source, {
+				title = "EasyAdmin",  
+				description = msg,           
+				type = 'error'           
+			})
 		end
 	end)
 	
@@ -509,14 +520,20 @@ Citizen.CreateThread(function()
 	end
 	exports('slapPlayer', slapPlayer)
 	
-	RegisterServerEvent("EasyAdmin:SlapPlayer", function(playerId,slapAmount)
+	RegisterServerEvent("EasyAdmin:SlapPlayer", function(playerId, slapAmount)
 		if DoesPlayerHavePermission(source, "player.slap") and CheckAdminCooldown(source, "slap") and slapPlayer(playerId, slapAmount) then
 			SetAdminCooldown(source, "slap")
 			PrintDebugMessage("Player "..getName(source,true).." slapped "..getName(playerId,true).." for "..slapAmount.." HP", 3)
 			local preferredWebhook = detailNotification ~= "false" and detailNotification or moderationNotification
-			SendWebhookMessage(preferredWebhook,string.format(GetLocalisedText("adminslappedplayer"), getName(source, false, true), getName(playerId, true, true), slapAmount), "slap", 16777214)
+			SendWebhookMessage(preferredWebhook, string.format(GetLocalisedText("adminslappedplayer"), getName(source, false, true), getName(playerId, true, true), slapAmount), "slap", 16777214)
 		elseif CachedPlayers[playerId].immune then
-			TriggerClientEvent("EasyAdmin:showNotification", source, GetLocalisedText("adminimmune"))
+		
+			local msg = GetLocalisedText("adminimmune")
+			TriggerClientEvent('ox_lib:notify', source, {
+				title = "EasyAdmin",  
+				description = msg,           
+				type = 'error'           
+			})
 		end
 	end)
 	
@@ -549,7 +566,12 @@ Citizen.CreateThread(function()
 				PrintDebugMessage("Player "..getName(source,true).." unfroze "..getName(playerId,true), 3)
 			end
 		elseif CachedPlayers[playerId].immune then
-			TriggerClientEvent("EasyAdmin:showNotification", source, GetLocalisedText("adminimmune"))
+			local msg = GetLocalisedText("adminimmune")
+			TriggerClientEvent('ox_lib:notify', source, {
+				title = "EasyAdmin",  
+				description = msg,           
+				type = 'error'           
+			})
 		end
 	end)
 	
@@ -607,21 +629,43 @@ Citizen.CreateThread(function()
 	
 	RegisterServerEvent("EasyAdmin:mutePlayer", function(playerId)
 		local src = source
-		if DoesPlayerHavePermission(src,"player.mute") and not CachedPlayers[playerId].immune and CheckAdminCooldown(source, "mute") then
-			SetAdminCooldown(source, "mute")
+		if DoesPlayerHavePermission(src, "player.mute") and not CachedPlayers[playerId].immune and CheckAdminCooldown(src, "mute") then
+			SetAdminCooldown(src, "mute")
 			local muted = mutePlayer(playerId, not MutedPlayers[playerId])
-
+	
 			if muted then
 				if MutedPlayers[playerId] then
-					TriggerClientEvent("EasyAdmin:showNotification", src, getName(playerId) .. " " .. GetLocalisedText("playermuted"))
-					SendWebhookMessage(moderationNotification,string.format(GetLocalisedText("adminmutedplayer"), getName(source, false, true), getName(playerId, false, true)), "mute", 16777214)
+					-- Player Muted Notification
+					TriggerClientEvent("ox_lib:notify", src, {
+						title = "EasyAdmin",
+						description = getName(playerId) .. " " .. GetLocalisedText("playermuted"),
+						type = "success"
+					})
+					SendWebhookMessage(moderationNotification, string.format(GetLocalisedText("adminmutedplayer"), getName(src, false, true), getName(playerId, false, true)), "mute", 16777214)
 				else
-					TriggerClientEvent("EasyAdmin:showNotification", src, getName(playerId) .. " " .. GetLocalisedText("playerunmuted"))
-					SendWebhookMessage(moderationNotification,string.format(GetLocalisedText("adminunmutedplayer"), getName(source, false, false), getName(playerId, false, true)), "mute", 16777214)
+					-- Player Unmuted Notification
+					TriggerClientEvent("ox_lib:notify", src, {
+						title = "EasyAdmin",
+						description = getName(playerId) .. " " .. GetLocalisedText("playerunmuted"),
+						type = "success"
+					})
+					SendWebhookMessage(moderationNotification, string.format(GetLocalisedText("adminunmutedplayer"), getName(src, false, false), getName(playerId, false, true)), "mute", 16777214)
 				end
 			else
-				-- todo: handle false retval
+				-- Handle failure (e.g., invalid state)
+				TriggerClientEvent("ox_lib:notify", src, {
+					title = "EasyAdmin",
+					description = "Unable to mute/unmute " .. getName(playerId),
+					type = "error"
+				})
 			end
+		elseif CachedPlayers[playerId].immune then
+			-- Notification for immune players
+			TriggerClientEvent("ox_lib:notify", src, {
+				title = "EasyAdmin",
+				description = getName(playerId) .. " is immune and cannot be muted.",
+				type = "error"
+			})
 		end
 	end)
 
@@ -751,7 +795,12 @@ Citizen.CreateThread(function()
 				end
 			end
 		elseif CachedPlayers[id].immune then
-			TriggerClientEvent("EasyAdmin:showNotification", source, GetLocalisedText("adminimmune"))
+			local msg = GetLocalisedText("adminimmune")
+			TriggerClientEvent('ox_lib:notify', source, {
+				title = "EasyAdmin",  
+				description = msg,           
+				type = 'error'           
+			})
 		end
 	end)
 
