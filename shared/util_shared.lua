@@ -151,7 +151,11 @@ end
 
 function copyToClipboard(text)
 	SendNUIMessage({action= "clip", text=text})
-	TriggerEvent("EasyAdmin:showNotification", GetLocalisedText("copiedtoclipboard"))
+	lib.notify({
+		title = "EasyAdmin",
+		description = "Copied to clipboard",
+		type = "success"
+	})
 end
 
 function DoesPlayerHavePermission(player, object)
