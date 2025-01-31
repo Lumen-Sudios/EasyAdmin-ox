@@ -2,7 +2,7 @@
   "dependencies": {
     "@discordjs/builders": "1.10.0",
     "@discordjs/collection": "2.1.1",
-    "@discordjs/core": "0.6.0",
+    "@discordjs/core": "2.0.1",
     "@discordjs/formatters": "0.6.0",
     "@discordjs/rest": "2.4.2",
     "@discordjs/util": "1.1.1",
@@ -24,7 +24,7 @@
 	},
   "resolutions": {
     "@discordjs/rest": "2.4.2",
-    "@discordjs/core": "0.6.0",
+    "@discordjs/core": "2.0.1",
     "@discordjs/formatters": "0.6.0",
     "@discordjs/collection": "2.1.1",
     "@discordjs/builders": "1.10.0",
