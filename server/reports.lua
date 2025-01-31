@@ -34,7 +34,8 @@ Citizen.CreateThread(function()
                 local cooldowntime = GetConvarInt("ea_callAdminCooldown", 60)
                 local source=source
                 if cooldowns[source] and cooldowns[source] > (time - cooldowntime) then
-                    TriggerClientEvent("EasyAdmin:showNotification", source, GetLocalisedText("waitbeforeusingagain"))
+                   
+                    TriggerClientEvent("ox_lib:notify", source, { description = "You need to wait before using this again.", type = "error" })
                     return
                 end
                 
@@ -42,20 +43,28 @@ Citizen.CreateThread(function()
                 local reportid = addNewReport(0, source, _,reason)
                 for i,_ in pairs(OnlineAdmins) do 
                     local notificationText = string.format(string.gsub(GetLocalisedText("playercalledforadmin"), "```", ""), getName(source,true,false), reason, reportid)
-                    TriggerClientEvent("EasyAdmin:showNotification", i, notificationText)
+                    TriggerClientEvent("ox_lib:notify", i, { description = notificationText, type = "info" })
                 end
                 
                 
                 local preferredWebhook = (reportNotification ~= "false") and reportNotification or moderationNotification
-                SendWebhookMessage(preferredWebhook,string.format(GetLocalisedText("playercalledforadmin"), getName(source, true, true), reason, reportid), "calladmin", 16776960)
-                --TriggerClientEvent('chatMessage', source, "^3EasyAdmin^7", {255,255,255}, GetLocalisedText("admincalled"))
-                TriggerClientEvent("EasyAdmin:showNotification", source, GetLocalisedText("admincalled"))
+                SendWebhookMessage(preferredWebhook, string.format(GetLocalisedText("playercalledforadmin"), getName(source, true, true), reason, reportid), "calladmin", 16776960)
+                
+                -- Send the notification using ox_lib:notify
+                TriggerClientEvent("ox_lib:notify", source, {
+                    description = GetLocalisedText("admincalled"),
+                    type = "success" -- Ensure this is a key-value pair
+                })
                 
                 time = os.time()
                 cooldowns[source] = time
-            else
-                TriggerClientEvent("EasyAdmin:showNotification", source, GetLocalisedText("invalidreport"))
-            end
+                else
+                    TriggerClientEvent("ox_lib:notify", source, {
+                        description = GetLocalisedText("invalidreport"),
+                        type = "error" -- You can change this to "error" for invalid reports
+                    })
+                end
+                
         end, false)
     end
     if GetConvar("ea_enableReportCommand", "true") == "true" then
