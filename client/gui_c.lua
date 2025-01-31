@@ -800,7 +800,7 @@ function GenerateMenu()
                         end
                     end
 
-                    local items = {"Copy Discord ID", "Toggle Cuff"}
+                    local items = {"Copy Discord ID"}
                     local thisItem = NativeUI.CreateListItem("Misc Options", items, 1)
                     thisPlayer:AddItem(thisItem)
                     thisItem.OnListSelected = function(sender, item, index)
@@ -812,8 +812,6 @@ function GenerateMenu()
                                 else
                                     TriggerEvent("EasyAdmin:showNotification", GetLocalisedText("nodiscordpresent"))
                                 end
-                            elseif i == "Toggle Cuff" then
-                                TriggerEvent('SEM_InteractionMenu:Cuff', thePlayer.id) -- Your cuffing event should go here (Default: Sem Interaction Menu)
                             end
                         end
                     end
