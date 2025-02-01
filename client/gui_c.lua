@@ -518,6 +518,70 @@ function GenerateMenu()
 							end
 						end
 					end
+
+					if permissions["player.jail"] then
+						local thisItem = NativeUI.CreateItem(GetLocalisedText("jailplayer"), "", true)
+						thisPlayer:AddItem(thisItem)
+					
+						thisItem.Activated = function(ParentMenu, SelectedItem)
+							local input = lib.inputDialog('Jail Details', {
+								{type = 'input', label = 'Reason for Jail', description = 'Provide a reason for jailing the player.', required = true, min = 3, max = 128},
+								{type = 'number', label = 'Jail Duration (seconds)', description = 'Specify the length of the jail time in seconds.', min = 1, max = 1200, default = 30, required = true}
+							})
+					
+							if input then
+								local JailReason = input[1] or "No reason provided"
+								local JailLengthSeconds = tonumber(input[2]) or 60
+					
+								if JailLengthSeconds >= 1 and JailLengthSeconds <= 1200 then
+									exports["Lumen-Jail"]:LumenJailPlayerFromGUI(thePlayer.id, JailLengthSeconds, JailReason) -- Make sure JailReason is passed here
+									lib.notify({
+										title = 'Player Jailed',
+										description = thePlayer.name .. ' has been jailed for ' .. JailLengthSeconds .. ' seconds.\nReason: ' .. JailReason,
+										type = 'success',
+										duration = 5000
+									})
+								else
+									lib.notify({
+										title = 'Invalid Jail Duration',
+										description = 'Please enter a valid number between 1 and 1200 seconds.',
+										type = 'error',
+										duration = 5000
+									})
+								end
+							end
+						end
+					end
+					
+					if permissions["player.unjail"] then
+						local thisItem = NativeUI.CreateItem(GetLocalisedText("unjailplayer"), "", true)
+						thisPlayer:AddItem(thisItem)
+					
+						thisItem.Activated = function(ParentMenu, SelectedItem)
+							local input = lib.inputDialog('Confirm Unjail', {
+								{type = 'input', label = 'Reason for Unjail', description = 'Provide a reason for unjailing the player.', required = true, min = 3, max = 128},
+								{type = 'checkbox', label = 'Are you sure you want to unjail ' .. thePlayer.name .. '?', required = true}
+							})
+					
+							if input and input[2] then
+								local UnjailReason = input[1] or "No reason provided"
+								exports["Lumen-Jail"]:LumenUnJailPlayerFromGUI(thePlayer.id, UnjailReason)
+								lib.notify({
+									title = 'Player Unjailed',
+									description = thePlayer.name .. ' has been released from jail.\nReason: ' .. UnjailReason,
+									type = 'success',
+									duration = 5000
+								})
+							else
+								lib.notify({
+									title = 'Unjail Cancelled',
+									description = 'The unjail action was cancelled.',
+									type = 'info',
+									duration = 5000
+								})
+							end
+						end
+					end
 					
 					if permissions["player.ban.temporary"] or permissions["player.ban.permanent"] then
 						local thisItem = NativeUI.CreateItem(GetLocalisedText("banplayer"), "", true)

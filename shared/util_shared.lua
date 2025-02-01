@@ -29,6 +29,8 @@ permissions = {
 	["server.resources.start"] = false,
 	["server.resources.stop"] = false,
 	["server.chat"] = false,
+	["player.jail"] = false,
+	["player.unjail"] = false,
 	
 	["immune"] = false,
 	["anon"] = false,
